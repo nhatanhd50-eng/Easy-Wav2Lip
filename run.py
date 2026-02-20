@@ -23,6 +23,10 @@ parser.add_argument('-vocal_file', type=str,
                     help='Input audio file path', required=False, default=False)
 parser.add_argument('-output_file', type=str, 
                     help='Output video file path', required=False, default=False)
+# === THÊM MỚI: Nhận tham số --fast để tránh lỗi crash ===
+parser.add_argument('--fast', action='store_true', default=False, 
+                    help='Enable fast mode optimizations')
+
 args = parser.parse_args()
 
 # retrieve variables from config.ini
@@ -54,6 +58,11 @@ debug_mask = config.getboolean('MASK', 'debug_mask')
 batch_process = config.getboolean('OTHER', 'batch_process')
 output_suffix = config['OTHER']['output_suffix']
 include_settings_in_suffix = config.getboolean('OTHER', 'include_settings_in_suffix')
+
+# === THÊM MỚI: Đọc cấu hình Batch Size để tối ưu tốc độ ===
+# Nếu file config không có, sẽ dùng giá trị mặc định 128 và 16
+wav2lip_batch_size = config.getint('OPTIONS', 'wav2lip_batch_size', fallback=128)
+face_det_batch_size = config.getint('OPTIONS', 'face_det_batch_size', fallback=16)
 
 if g_colab():
     preview_input = config.getboolean("OTHER", "preview_input")
@@ -351,6 +360,9 @@ while True:
         f"Processing{' preview of' if preview_settings else ''} "
         f"{input_videofile} using {input_audiofile} for audio"
     )
+    
+    # === THÊM MỚI: Log thông tin Batch Size đang dùng ===
+    print(f"⚡ Optimization: Wav2Lip Batch={wav2lip_batch_size}, FaceDet Batch={face_det_batch_size}")
 
     # execute Wav2Lip & upscaler
 
@@ -388,6 +400,11 @@ while True:
         str(preview_settings),
         "--mouth_tracking",
         str(mouth_tracking),
+        # === THÊM MỚI: Truyền tham số Batch Size vào inference.py ===
+        "--wav2lip_batch_size",
+        str(wav2lip_batch_size),
+        "--face_det_batch_size",
+        str(face_det_batch_size),
     ]
 
     # Run the command
