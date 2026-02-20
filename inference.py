@@ -129,6 +129,11 @@ parser.add_argument(
     "--wav2lip_batch_size", type=int, help="Batch size for Wav2Lip model(s)", default=1
 )
 
+# === THÊM MỚI: Tham số điều chỉnh tốc độ tìm khuôn mặt ===
+parser.add_argument(
+    "--face_det_batch_size", type=int, help="Batch size for face detection", default=16
+)
+
 parser.add_argument(
     "--out_height",
     default=480,
@@ -236,6 +241,9 @@ parser.add_argument(
     default="Fast",
 )
 
+# === SỬA LỖI: Di chuyển parse_args ra global scope để các hàm bên dưới có thể dùng được args ===
+args = parser.parse_args()
+
 with open(os.path.join("checkpoints", "predictor.pkl"), "rb") as f:
     predictor = pickle.load(f)
 
@@ -268,7 +276,8 @@ def do_load(checkpoint_path):
     detector_model = detector.model
 
 def face_rect(images):
-    face_batch_size = 8
+    # === SỬA ĐỔI: Dùng args.face_det_batch_size thay vì hard-code ==
+    face_batch_size = args.face_det_batch_size
     num_batches = math.ceil(len(images) / face_batch_size)
     prev_ret = None
     for i in range(num_batches):
@@ -776,6 +785,6 @@ def main():
         ])
 
 if __name__ == "__main__":
-    args = parser.parse_args()
+    # args already parsed globally
     do_load(args.checkpoint_path)
     main()
