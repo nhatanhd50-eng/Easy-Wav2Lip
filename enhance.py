@@ -17,6 +17,6 @@ def load_sr():
 
 def upscale(image, properties):
     _, _, output = properties.enhance(
-        image, has_aligned=False, only_center_face=False, paste_back=True
+        image, has_aligned=False, only_center_face=True, paste_back=True
     )
     return output
